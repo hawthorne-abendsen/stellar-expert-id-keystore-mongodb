@@ -12,7 +12,6 @@ class MongoStorage {
     /**
      * @param {Object} options 
      * @param {String} options.connectionString
-     * @param {String} options.dbName
      */
     constructor(options) {
         if (!options)
@@ -21,11 +20,7 @@ class MongoStorage {
         if (!options.connectionString)
             throw new Error('Connection string is null or undefined')
 
-        if (!options.dbName)
-            throw new Error('DB name is null or undefined')
-
         this.connectionString = options.connectionString
-        this.dbName = options.dbName
 
         this.client = new MongoClient(this.connectionString)
 
@@ -33,7 +28,7 @@ class MongoStorage {
 
     async connect() {
         await this.client.connect()
-        this.db = this.client.db(this.dbName)
+        this.db = this.client.db()
         await this.db.collection(userCollectionName).createIndex({
             'email': 1
         }, {

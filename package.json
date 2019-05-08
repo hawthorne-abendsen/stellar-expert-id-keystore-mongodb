@@ -1,6 +1,6 @@
 {
   "name": "stellar-expert-id-keystore-mongodb",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MongoDB persistence storage for stellar-expert-id-keystore",
   "main": "index.js",
   "scripts": {
