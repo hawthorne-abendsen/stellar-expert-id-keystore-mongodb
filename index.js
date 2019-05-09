@@ -26,6 +26,9 @@ class MongoStorage {
 
     }
 
+    /* 
+     * Initialize storage, db connection.
+     **/
     async connect() {
         await this.client.connect()
         this.db = this.client.db()
@@ -36,12 +39,20 @@ class MongoStorage {
         })
     }
 
+    /* 
+     * Close connection.
+     **/
     async close() {
         if (this.client.isConnected())
             this.client.close()
         await Promise.resolve()
     }
 
+    /*
+     * Fetch user by email.
+     * @param {String} email - User email
+     * @return {Object} User object if found or null
+     **/
     async getUserByEmail(email) {
         const user = await this.db.collection(userCollectionName).findOne({
             email: email
@@ -52,6 +63,17 @@ class MongoStorage {
         return user
     }
 
+    /*
+     * Create new user account.
+     * @param {Object} user - Account object
+     * @param {String} user.email - Email associated with a user
+     * @param {String} user.passwordHash - User's password hash
+     * @param {String} user.totpKey - 2FA TOTP seed
+     * @param {Number} user.createDate - Create timestamp.
+     * @param {Number} user.updateDate - Update timestamp.
+     * @param {Number} user.v - Data version.
+     * @return {Object} Persistent account object
+     **/
     async registerUser(user) {
         await this.db.collection(userCollectionName).insertOne(user)
 
@@ -63,20 +85,32 @@ class MongoStorage {
         return user
     }
 
-    async updateUser(user) {
+    /*
+     * Update existing account.
+     * @param {String} email - User email
+     * @param {Object} update - Account update object
+     * @param {String} update.data - encrypted sensitive account data
+     * @param {String} update.passwordHash - User's password hash
+     * @param {String} update.totpKey - 2FA TOTP seed
+     * @param {Number} update.updateDate - Update timestamp.
+     * @param {Number} update.v - Data version.
+     * @return {Object} Saved user object
+     **/
+    async updateUser(email, update) {
 
-        const oldUser = await this.getUserByEmail(user.email)
+        const user = await this.getUserByEmail(email)
         if (!user)
-            throw new Error('Unable to find user with specified email')
+            throw new Error('Unable to find a user with the specified email')
 
         let updateObject = {}
-        for (let key in user) {
-            if (user[key] !== oldUser[key] && key !== '_id')
-                updateObject[key] = user[key]
+        for (let key of ['data', 'passwordHash', 'totpKey', 'updateDate', 'v']) {
+            const updateValue = update[key]
+            if (update.hasOwnProperty(key) && user[key] !== updateValue)
+                updateObject[key] = updateValue
         }
 
         if (Object.keys(updateObject).length < 1)
-            return
+            return user
 
         const result = await this.db.collection(userCollectionName)
             .updateOne({
