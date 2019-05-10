@@ -53,7 +53,7 @@ class MongoStorage {
      * @param {String} email - User email
      * @return {Object} User object if found or null
      **/
-    async getUserByEmail(email) {
+    async fetchUser(email) {
         const user = await this.db.collection(userCollectionName).findOne({
             email: email
         })
@@ -128,7 +128,7 @@ class MongoStorage {
         return user
     }
 
-    async deleteByEmail(email) {
+    async deleteUser(email) {
         const result = await this.db.collection(userCollectionName).deleteOne({
             email: email
         })
